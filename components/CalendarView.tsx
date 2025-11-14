@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getAllData } from "@/lib/storage";
 
 interface CalendarViewProps {
@@ -9,8 +9,14 @@ interface CalendarViewProps {
 
 export default function CalendarView({ onDateSelect }: CalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [isClient, setIsClient] = useState(false);
 
-  const allData = getAllData();
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsClient(true);
+  }, []);
+
+  const allData = isClient ? getAllData() : {};
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getAllDatesWithData, getDataForDate, deleteDataForDate } from "@/lib/storage";
 
 interface HistoryViewProps {
@@ -10,8 +10,14 @@ interface HistoryViewProps {
 export default function HistoryView({ onEditDate }: HistoryViewProps) {
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
 
-  const dates = getAllDatesWithData();
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsClient(true);
+  }, []);
+
+  const dates = isClient ? getAllDatesWithData() : [];
 
   const toggleExpanded = (date: string) => {
     const newExpanded = new Set(expandedDates);

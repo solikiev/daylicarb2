@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { DayData, Meal } from "@/lib/types";
 import {
   getDataForDate,
@@ -23,6 +23,13 @@ export default function MealTracker({
   // Use a version counter to force re-renders when data changes
   const [version, setVersion] = useState(0);
   const [copyFromDate, setCopyFromDate] = useState<string>("");
+  const [isClient, setIsClient] = useState(false);
+
+  // Wait for client-side hydration
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsClient(true);
+  }, []);
 
   // Derive dayData from selectedDate and version
   const dayData = useMemo(() => {
@@ -30,6 +37,23 @@ export default function MealTracker({
     const _ = version; // Force dependency on version
     return getDataForDate(selectedDate);
   }, [selectedDate, version]);
+
+  // Don't render until client-side to avoid hydration mismatch
+  if (!isClient) {
+    return (
+      <div className="max-w-4xl mx-auto p-4 space-y-6">
+        <div className="bg-white rounded-lg shadow p-4">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-2xl font-bold">Today</h2>
+          </div>
+          <div className="text-center p-4 rounded-lg bg-gray-100 border-gray-300 border-2">
+            <div className="text-sm text-gray-600">Total Carbs</div>
+            <div className="text-4xl font-bold">0g</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleMealChange = (
     index: number,

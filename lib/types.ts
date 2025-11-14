@@ -20,6 +20,8 @@ export interface DayData {
   totalActual: number;
   totalPlannedMin: number;
   totalPlannedMax: number;
+  dailyTargetMin?: number;
+  dailyTargetMax?: number;
 }
 
 export const MEAL_TYPES: MealType[] = [

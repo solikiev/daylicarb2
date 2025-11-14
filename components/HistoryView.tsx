@@ -53,16 +53,33 @@ export default function HistoryView({ onEditDate }: HistoryViewProps) {
       {dates.map((date) => {
         const dayData = getDataForDate(date);
         const isExpanded = expandedDates.has(date);
+        
+        // Use daily target if set, otherwise fall back to meal totals
+        const effectiveTargetMin = dayData.dailyTargetMin ?? dayData.totalPlannedMin;
+        const effectiveTargetMax = dayData.dailyTargetMax ?? dayData.totalPlannedMax;
+        
+        // Determine background color based on target
         const isOverTarget =
-          dayData.totalActual > dayData.totalPlannedMax &&
-          dayData.totalPlannedMax > 0;
+          dayData.totalActual > effectiveTargetMax && effectiveTargetMax > 0;
+        const isUnderTarget =
+          dayData.totalActual < effectiveTargetMin && effectiveTargetMin > 0;
+        const isWithinTarget =
+          dayData.totalActual >= effectiveTargetMin &&
+          dayData.totalActual <= effectiveTargetMax &&
+          effectiveTargetMax > 0;
 
         return (
           <div key={date} className="bg-white rounded-lg shadow">
             {/* Summary Header */}
             <div
               className={`p-4 cursor-pointer ${
-                isOverTarget ? "bg-red-50" : "bg-green-50"
+                isOverTarget
+                  ? "bg-red-50"
+                  : isUnderTarget
+                  ? "bg-yellow-50"
+                  : isWithinTarget
+                  ? "bg-green-50"
+                  : "bg-gray-50"
               }`}
               onClick={() => toggleExpanded(date)}
             >
@@ -71,10 +88,12 @@ export default function HistoryView({ onEditDate }: HistoryViewProps) {
                   <div className="font-semibold text-lg">{date}</div>
                   <div className="text-sm text-gray-600 mt-1">
                     Total: {dayData.totalActual}g
-                    {dayData.totalPlannedMax > 0 && (
+                    {effectiveTargetMax > 0 && (
                       <span>
                         {" "}
-                        / Target: {dayData.totalPlannedMin}-{dayData.totalPlannedMax}g
+                        / {dayData.dailyTargetMin || dayData.dailyTargetMax
+                          ? "Daily Target"
+                          : "Meal Target"}: {effectiveTargetMin}-{effectiveTargetMax}g
                       </span>
                     )}
                   </div>

@@ -20,6 +20,8 @@ export function createEmptyDay(date: string): DayData {
     totalActual: 0,
     totalPlannedMin: 0,
     totalPlannedMax: 0,
+    dailyTargetMin: undefined,
+    dailyTargetMax: undefined,
   };
 }
 

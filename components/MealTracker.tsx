@@ -77,6 +77,19 @@ export default function MealTracker({
     setVersion((v) => v + 1);
   };
 
+  const handleDailyTargetChange = (
+    field: "dailyTargetMin" | "dailyTargetMax",
+    value: number | undefined
+  ) => {
+    const updatedDayData: DayData = {
+      ...dayData,
+      [field]: value,
+    };
+
+    saveDataForDate(updatedDayData);
+    setVersion((v) => v + 1);
+  };
+
   const handleCopyDay = () => {
     if (copyFromDate && copyFromDate !== selectedDate) {
       copyDayData(copyFromDate, selectedDate);
@@ -106,10 +119,19 @@ export default function MealTracker({
 
   const availableDates = getAllDatesWithData();
 
+  // Determine effective target range (daily target or meal totals)
+  const effectiveTargetMin = dayData.dailyTargetMin ?? dayData.totalPlannedMin;
+  const effectiveTargetMax = dayData.dailyTargetMax ?? dayData.totalPlannedMax;
+
+  // Color logic based on daily target range
   const isOverTarget =
-    dayData.totalActual > dayData.totalPlannedMax && dayData.totalPlannedMax > 0;
+    dayData.totalActual > effectiveTargetMax && effectiveTargetMax > 0;
   const isUnderTarget =
-    dayData.totalActual < dayData.totalPlannedMax && dayData.totalActual > 0;
+    dayData.totalActual < effectiveTargetMin && effectiveTargetMin > 0 && dayData.totalActual > 0;
+  const isWithinTarget =
+    dayData.totalActual >= effectiveTargetMin &&
+    dayData.totalActual <= effectiveTargetMax &&
+    effectiveTargetMax > 0;
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">
@@ -127,21 +149,85 @@ export default function MealTracker({
           />
         </div>
 
+        {/* Daily Target Input Section */}
+        <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">
+            Daily Target Range
+          </h3>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">
+                Target Min (g)
+              </label>
+              <input
+                type="number"
+                inputMode="numeric"
+                value={dayData.dailyTargetMin ?? ""}
+                onChange={(e) =>
+                  handleDailyTargetChange(
+                    "dailyTargetMin",
+                    e.target.value ? parseInt(e.target.value) : undefined
+                  )
+                }
+                placeholder="Optional"
+                className="w-full px-3 py-2 border rounded-lg text-sm"
+                min="0"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">
+                Target Max (g)
+              </label>
+              <input
+                type="number"
+                inputMode="numeric"
+                value={dayData.dailyTargetMax ?? ""}
+                onChange={(e) =>
+                  handleDailyTargetChange(
+                    "dailyTargetMax",
+                    e.target.value ? parseInt(e.target.value) : undefined
+                  )
+                }
+                placeholder="Optional"
+                className="w-full px-3 py-2 border rounded-lg text-sm"
+                min="0"
+              />
+            </div>
+          </div>
+          {(dayData.dailyTargetMin || dayData.dailyTargetMax) && (
+            <div className="mt-2 text-xs text-gray-600">
+              Daily Target: {dayData.dailyTargetMin || 0}-
+              {dayData.dailyTargetMax || 0}g
+            </div>
+          )}
+        </div>
+
         {/* Total Display */}
         <div
           className={`text-center p-4 rounded-lg ${
             isOverTarget
               ? "bg-red-100 border-red-300"
               : isUnderTarget
+              ? "bg-yellow-100 border-yellow-300"
+              : isWithinTarget
               ? "bg-green-100 border-green-300"
               : "bg-gray-100 border-gray-300"
           } border-2`}
         >
           <div className="text-sm text-gray-600">Total Carbs</div>
-          <div className="text-4xl font-bold">{dayData.totalActual}g</div>
-          {dayData.totalPlannedMax > 0 && (
+          <div className="text-4xl font-bold">
+            {dayData.totalActual}g
+            {effectiveTargetMax > 0 && (
+              <span className="text-2xl text-gray-600">
+                /{effectiveTargetMin}-{effectiveTargetMax}g
+              </span>
+            )}
+          </div>
+          {effectiveTargetMax > 0 && (
             <div className="text-sm text-gray-600 mt-1">
-              Target: {dayData.totalPlannedMin}-{dayData.totalPlannedMax}g
+              {dayData.dailyTargetMin || dayData.dailyTargetMax
+                ? `Daily Target: ${effectiveTargetMin}-${effectiveTargetMax}g`
+                : `Meal Total: ${effectiveTargetMin}-${effectiveTargetMax}g`}
             </div>
           )}
         </div>

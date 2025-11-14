@@ -59,17 +59,25 @@ export default function CalendarView({ onDateSelect }: CalendarViewProps) {
     const dayData = allData[dateKey];
     if (!dayData || dayData.totalActual === 0) return "bg-gray-100";
 
-    if (dayData.totalPlannedMax === 0) return "bg-gray-100";
+    // Use daily target if set, otherwise fall back to meal totals
+    const effectiveTargetMin = dayData.dailyTargetMin ?? dayData.totalPlannedMin;
+    const effectiveTargetMax = dayData.dailyTargetMax ?? dayData.totalPlannedMax;
 
-    if (dayData.totalActual > dayData.totalPlannedMax) {
+    // No target set
+    if (effectiveTargetMax === 0) return "bg-gray-100";
+
+    // Red: Over target max
+    if (dayData.totalActual > effectiveTargetMax) {
       return "bg-red-200 border-red-400";
     }
 
-    if (dayData.totalActual <= dayData.totalPlannedMax) {
-      return "bg-green-200 border-green-400";
+    // Yellow/Orange: Below target min
+    if (dayData.totalActual < effectiveTargetMin) {
+      return "bg-yellow-200 border-yellow-400";
     }
 
-    return "bg-gray-100";
+    // Green: Within or at target range
+    return "bg-green-200 border-green-400";
   };
 
   // Build calendar grid
@@ -151,7 +159,11 @@ export default function CalendarView({ onDateSelect }: CalendarViewProps) {
         <div className="mt-4 flex flex-wrap gap-4 justify-center text-sm">
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 bg-green-200 border-2 border-green-400 rounded"></div>
-            <span>Under/On Target</span>
+            <span>Within Target</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-yellow-200 border-2 border-yellow-400 rounded"></div>
+            <span>Below Target</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 bg-red-200 border-2 border-red-400 rounded"></div>
